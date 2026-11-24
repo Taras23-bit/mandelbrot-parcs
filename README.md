@@ -36,17 +36,35 @@ python mandelbrot.py --input input_sequential.json --image mandelbrot.png
 
 ## Запуск у Google Cloud
 
-Кожен вузол (master і кожен воркер) — окрема VM.
+Кожен вузол (master і кожен воркер) — окрема VM на Container-Optimized OS. Контейнер
+`hummer12007/parcs-node` запускається startup-скриптом (`create-with-container` для нових
+проєктів більше не підтримується).
 ```
 gcloud config set compute/zone europe-north1-a
 gcloud services enable compute.googleapis.com
-gcloud compute firewall-rules create parcs-web --network=default --direction=INGRESS --action=ALLOW --rules=tcp:8080 --source-ranges=ВАШ_IP/32
-gcloud compute instances create-with-container master --machine-type=e2-standard-2 --container-image=registry.hub.docker.com/hummer12007/parcs-node --container-env PARCS_ARGS="master"
+gcloud compute firewall-rules create parcs-web --network=default --direction=INGRESS --action=ALLOW --rules=tcp:8080 --source-ranges=ВАШ_IPv4/32
+
+cat > master.sh <<'EOS'
+#!/bin/bash
+iptables -I INPUT -j ACCEPT
+docker start parcs 2>/dev/null || docker run -d --name parcs --restart always --network host -e PARCS_ARGS="master" hummer12007/parcs-node
+EOS
+gcloud compute instances create master --machine-type=e2-standard-2 --image-family=cos-stable --image-project=cos-cloud --metadata-from-file=startup-script=master.sh
+
 MASTER_IP=$(gcloud compute instances describe master --format='get(networkInterfaces[0].networkIP)')
-gcloud compute instances create-with-container worker1 worker2 worker3 worker4 --machine-type=e2-standard-2 --container-image=registry.hub.docker.com/hummer12007/parcs-node --container-env PARCS_ARGS="worker $MASTER_IP"
+cat > worker.sh <<EOS
+#!/bin/bash
+iptables -I INPUT -j ACCEPT
+docker start parcs 2>/dev/null || docker run -d --name parcs --restart always --network host -e PARCS_ARGS="worker $MASTER_IP" hummer12007/parcs-node
+EOS
+gcloud compute instances create worker1 worker2 worker3 worker4 --machine-type=e2-standard-2 --image-family=cos-stable --image-project=cos-cloud --metadata-from-file=startup-script=worker.sh
 gcloud compute instances list
 ```
-Вебінтерфейс: `http://EXTERNAL_IP_MASTER:8080`.
+`iptables -I INPUT -j ACCEPT` відкриває вбудований фаєрвол COS для портів PARCS; доступ ззовні
+все одно обмежує правило `parcs-web`.
+
+Вебінтерфейс: `http://EXTERNAL_IP_MASTER:8080`. Після експериментів:
+`gcloud compute instances stop master worker1 worker2 worker3 worker4`.
 
 ## Експеримент
 
