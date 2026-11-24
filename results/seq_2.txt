@@ -1,0 +1,24 @@
+{
+  "distribution": "cyclic", 
+  "elapsed_seconds": 143.46558380126953, 
+  "height": 1200, 
+  "image_sha256": "c3737d53d31bdc9e6386291142f540bd00b4120998c76ef057e9a3517c965138", 
+  "inside_percent": 19.636, 
+  "inside_points": 377006, 
+  "max_iter": 1000, 
+  "mode": "sequential", 
+  "pixels": 1920000, 
+  "region": [
+    -2.2, 
+    1.0, 
+    -1.2, 
+    1.2
+  ], 
+  "rows_per_worker": [
+    1200
+  ], 
+  "timer": "time.time", 
+  "total_iterations": 387086805, 
+  "width": 1600, 
+  "workers_used": 0
+}

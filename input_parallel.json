@@ -1,0 +1,11 @@
+{
+  "mode": "parallel",
+  "width": 1600,
+  "height": 1200,
+  "max_iter": 1000,
+  "x_min": -2.2,
+  "x_max": 1.0,
+  "y_min": -1.2,
+  "y_max": 1.2,
+  "distribution": "cyclic"
+}
